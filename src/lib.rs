@@ -34,7 +34,8 @@ use std::cmp::PartialOrd;
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 use thiserror::Error;
-
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
 mod sys;
 
 /// Kinds of errors returned by the library.
@@ -183,6 +184,7 @@ impl<'a> Iterator for Iter<'a> {
 unsafe impl<'a> Send for Iter<'a> {}
 
 /// `Kstat` represents a single kernel statistic.
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Kstat<'a> {
     /// The creation time of the stat, in nanoseconds.
@@ -199,6 +201,7 @@ pub struct Kstat<'a> {
     pub ks_type: Type,
     /// The class of the kstat.
     pub ks_class: &'a str,
+    #[cfg_attr(feature = "serde", serde(skip))]
     ks: *mut sys::kstat_t,
 }
 
@@ -283,6 +286,7 @@ impl<'a> TryFrom<&'a *mut sys::kstat_t> for Kstat<'a> {
 }
 
 /// The type of a kstat.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Type {
     Raw,
@@ -307,6 +311,7 @@ impl TryFrom<u8> for Type {
 }
 
 /// The data type of a single name/value pair of a named kstat.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum NamedType {
     Char,
@@ -333,8 +338,10 @@ impl TryFrom<u8> for NamedType {
 }
 
 /// Data from a single kstat.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug)]
 pub enum Data<'a> {
+    #[cfg_attr(feature = "serde", serde(borrow))]
     Raw(Vec<&'a [u8]>),
     Named(Vec<Named<'a>>),
     Intr(Intr),
@@ -344,6 +351,7 @@ pub enum Data<'a> {
 }
 
 /// An I/O kernel statistic
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct Io {
     pub nread: u64,
@@ -391,6 +399,7 @@ impl TryFrom<&*const sys::kstat_io_t> for Io {
 }
 
 /// A timer kernel statistic.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone)]
 pub struct Timer<'a> {
     pub name: &'a str,
@@ -429,6 +438,7 @@ impl<'a> TryFrom<&'a *const sys::kstat_timer_t> for Timer<'a> {
 }
 
 /// Interrupt kernel statistic.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone)]
 pub struct Intr {
     pub hard: u32,
@@ -462,6 +472,7 @@ impl TryFrom<&*const sys::kstat_intr_t> for Intr {
 }
 
 /// A name/value data element from a named kernel statistic.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug)]
 pub struct Named<'a> {
     pub name: &'a str,
@@ -476,6 +487,7 @@ impl<'a> Named<'a> {
 }
 
 /// The value part of a name-value kernel statistic.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug)]
 pub enum NamedData<'a> {
     Char(&'a [u8]),

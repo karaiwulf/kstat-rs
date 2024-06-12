@@ -7,8 +7,13 @@ license = "Apache-2.0"
 description = "Rust interface to illumos's libkstat"
 repository = "https://github.com/oxidecomputer/kstat-rs"
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dependencies]
 libc = "0.2"
+serde = { version = "1.0.203", features = ["derive"], optional = true }
 thiserror = "1"
 
 [dev-dependencies]
